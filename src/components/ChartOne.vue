@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { PropType } from 'vue'
+import { isDark } from '~/composables'
 
 interface NameValue {
   name: string
@@ -31,14 +32,20 @@ const formatData = computed(() => {
     return [...props.data, ...restData]
   }
 })
+const primaryColor = computed(() => {
+  return isDark.value ? '#63e2b7' : '#18a058'
+})
+const secondaryColor = computed(() => {
+  return 'rgba(24, 160, 88, 0.16)'
+})
 </script>
 <template>
   <div relative w-full h-50>
-    <div absolute bottom="-4" left-25 z-1 p="x-3 y-0.5" bg-gray-900 b-gray-50 border class="title">
+    <div absolute bottom="-4" left-25 z-1 p="x-3 y-0.5" bg-white b-gray-900 dark:bg-black dark:b-gray-50 border class="title">
       {{ title }}
     </div>
     <ProcessCircle
-      v-for="(item,idx) in formatData" :key="idx" transform="scale-x-[-1]" absolute :percentage="item.value * 100" :stroke-width="10" :width="(200-idx*40)" :color="idx<2?'#63a26c':'#aab9af'" :style="{
+      v-for="(item,idx) in formatData" :key="idx" transform="scale-x-[-1]" absolute :percentage="item.value * 100" :stroke-width="10" :width="(200-idx*40)" :color="idx<2?primaryColor:secondaryColor" :style="{
         top: `${idx*20}px`,
         left: `${idx*20}px`,
       }"

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { CSSProperties } from 'vue'
+import { isDark } from '~/composables'
 const props = defineProps({
   width: {
     type: Number,
@@ -67,7 +68,9 @@ const getCurrentColor = (percentage: number) => {
 const stroke = computed(() => {
   return getCurrentColor(props.percentage)
 })
-
+const strokeBg = computed(() => {
+  return isDark.value ? 'rgba(255, 255, 255, 0.06)' : 'rgba(46, 51, 56, 0.05)'
+})
 const circlePathStyle = computed(
   (): CSSProperties => ({
     strokeDasharray: `${
@@ -86,7 +89,7 @@ const circlePathStyle = computed(
       <path
         class="el-progress-circle__track"
         :d="trackPath"
-        stroke="#323232"
+        :stroke="strokeBg"
         :stroke-width="relativeStrokeWidth"
         fill="none"
         :style="trailPathStyle"
