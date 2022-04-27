@@ -18,10 +18,6 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
-  strokeLinecap: {
-    type: String,
-    default: 'round',
-  },
 })
 const relativeStrokeWidth = computed(() =>
   ((props.strokeWidth / props.width) * 100).toFixed(1),
@@ -99,7 +95,7 @@ const circlePathStyle = computed(
         :d="trackPath"
         :stroke="stroke"
         fill="none"
-        :stroke-linecap="strokeLinecap"
+        stroke-linecap="round"
         :stroke-width="percentage ? relativeStrokeWidth : 0"
         :style="circlePathStyle"
       />
