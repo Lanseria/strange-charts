@@ -1,32 +1,107 @@
 <script lang="ts" setup>
+import type { CSSProperties } from 'vue'
 const props = defineProps({
-  val: {
+  width: {
     type: Number,
-    required: true,
+    default: 126,
+  },
+  strokeWidth: {
+    type: Number,
+    default: 6,
+  },
+  color: {
+    type: [String, Function],
+    default: '#63a26c',
+  },
+  percentage: {
+    type: Number,
+    default: 0,
+  },
+  strokeLinecap: {
+    type: String,
+    default: 'round',
   },
 })
-let { val } = props
-const r = $ref(90)
-const c = $ref(Math.PI * (r * 2))
-
-if (val < 0)
-  val = 0
-if (val > 100)
-  val = 100
-
-const offsetPx = computed(() => {
-  return ((100 - val) / 100) * c
+const relativeStrokeWidth = computed(() =>
+  ((props.strokeWidth / props.width) * 100).toFixed(1),
+)
+const radius = computed(() => {
+  return Number.parseInt(
+          `${50 - Number.parseFloat(relativeStrokeWidth.value) / 2}`,
+          10,
+  )
 })
+const perimeter = computed(() => 2 * Math.PI * radius.value)
+const trackPath = computed(() => {
+  const r = radius.value
+  const isDashboard = false
+  return `
+          M 50 50
+          m 0 ${isDashboard ? '' : '-'}${r}
+          a ${r} ${r} 0 1 1 0 ${isDashboard ? '-' : ''}${r * 2}
+          a ${r} ${r} 0 1 1 0 ${isDashboard ? '' : '-'}${r * 2}
+          `
+})
+const rate = computed(() => 1)
+const strokeDashoffset = computed(() => {
+  const offset = (-1 * perimeter.value * (1 - rate.value)) / 2
+  return `${offset}px`
+})
+
+const trailPathStyle = computed(
+  (): CSSProperties => ({
+    strokeDasharray: `${perimeter.value * rate.value}px, ${
+          perimeter.value
+        }px`,
+    strokeDashoffset: strokeDashoffset.value,
+  }),
+)
+const getCurrentColor = (percentage: number) => {
+  const { color } = props
+  if (typeof color === 'function')
+    return color(percentage)
+
+  if (typeof color === 'string')
+    return color
+}
+const stroke = computed(() => {
+  return getCurrentColor(props.percentage)
+})
+
+const circlePathStyle = computed(
+  (): CSSProperties => ({
+    strokeDasharray: `${
+          perimeter.value * rate.value * (props.percentage / 100)
+        }px, ${perimeter.value}px`,
+    strokeDashoffset: strokeDashoffset.value,
+    transition: 'stroke-dasharray 0.6s ease 0s, stroke 0.6s ease',
+  }),
+)
 </script>
 <template>
-  <svg id="svg" width="200" height="200" viewPort="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <circle :r="r" cx="100" cy="100" fill="transparent" stroke-dasharray="565.48" stroke-dashoffset="0" />
-    <circle
-      id="bar" :r="r" cx="100" cy="100" fill="transparent" stroke-dasharray="565.48" stroke-dashoffset="0" :style="{
-        strokeDashoffset: offsetPx + 'px'
-      }"
-    />
-  </svg>
+  <div
+    :style="{ height: `${width}px`, width: `${width}px` }"
+  >
+    <svg viewBox="0 0 100 100">
+      <path
+        class="el-progress-circle__track"
+        :d="trackPath"
+        stroke="#323232"
+        :stroke-width="relativeStrokeWidth"
+        fill="none"
+        :style="trailPathStyle"
+      />
+      <path
+        class="el-progress-circle__path"
+        :d="trackPath"
+        :stroke="stroke"
+        fill="none"
+        :stroke-linecap="strokeLinecap"
+        :stroke-width="percentage ? relativeStrokeWidth : 0"
+        :style="circlePathStyle"
+      />
+    </svg>
+  </div>
 </template>
 <style lang="css" scoped>
 
@@ -35,9 +110,6 @@ const offsetPx = computed(() => {
   transition: stroke-dashoffset 1s linear;
   stroke: #666;
   stroke-width: 1em;
-}
-#svg #bar {
-  stroke: #FF9F1E;
 }
 #cont {
   display: block;
